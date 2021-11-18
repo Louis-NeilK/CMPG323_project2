@@ -11,6 +11,7 @@ app.get("/", function(req, res){
     res.render("index")
 })
 
+
 let port = process.env.PORT;
 if (port == null || port == "") {
 	port = 3000;
