@@ -11,6 +11,14 @@ app.get("/", function(req, res){
     res.render("index")
 })
 
+app.get("/myphotos", function(req, res){
+    res.render("myphotos")
+})
+
+app.get("/sharedphotos", function(req, res){
+    res.render("sharedphotos")
+})
+
 
 let port = process.env.PORT;
 if (port == null || port == "") {
