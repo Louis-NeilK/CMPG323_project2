@@ -1,1 +1,40 @@
-<h1>Index</h1>
+<%- include("partials/title") -%>
+<body class="indexBackground">
+    <nav class="navbar navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="/images/fotoshare_logo.png" alt="fotoshare_logo" class="headerLogo">
+            </a>
+        </div>
+    </nav>
+
+    <div class="indexBody">
+        <div class="indexColour">
+            <h1 class="textCenter"><span class="text-success"><b>Share</b></span> your <span class="text-success"><b>photos</b></span> with your <span class="text-success"><b>colleagues</b></span>!</h1>
+            <br>
+            <div class="row margintop2">
+                <div class="col-lg-6 textCenter signDiv">
+                    <h3>Sign In</h3>
+                    <br>
+                    <form action="/signin" method="post">
+                        <input class="form-control" type="email" name="username" placeholder="Email" aria-label="Email" required>
+                        <input class="form-control margintop1" type="password" name="password" placeholder="Password" aria-label="Password" required>
+                        <button class="btn btn-outline-success width10 margintop1">Sign In</button>
+                    </form>
+                </div>
+                <div class="col-lg-6 textCenter signDiv">
+                    <h3>Sign Up</h3>
+                    <br>
+                    <form action="/signup" method="post">
+                        <input class="form-control" type="email" name="username" placeholder="Enter your email" aria-label="Email" required>
+                        <input class="form-control margintop1" type="password" name="password" placeholder="Enter your password" aria-label="Password" required>
+                        <input class="form-control margintop1" type="text" name="name" placeholder="Enter your name" aria-label="Name" required>
+                        <input type="number" name="access" min="1" max="3" class="form-control margintop1" required placeholder="Enter your access level">
+                        <button class="btn btn-success width10 margintop1">Sign Up</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%- include("partials/footer") -%>
+</body>

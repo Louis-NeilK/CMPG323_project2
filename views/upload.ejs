@@ -1,0 +1,45 @@
+<%- include("partials/title") -%>
+<body class="">
+    <nav class="navbar navbar-light bg-light">
+        <div class="container-fluid navbarSpacing">
+            <a class="navbar-brand" href="/myphotos">
+                <img src="/images/fotoshare_logo.png" alt="fotoshare_logo" class="headerLogo">
+            </a>
+          <form class="d-flex">
+            <a href="/myphotos" class="btn btn-success btnHeader">My Photos</a>
+            <a href="/logout" class="text-danger btnLogout">Logout</a>
+          </form>
+        </div>
+    </nav> 
+
+    <div class="uploadBody">
+        <h1 class="textCenter">Upload a <span class="text-success">Photo</span></h1>
+        <form action="/uploadPic" method="post" enctype="multipart/form-data" class="margintop2">
+            <div class="imgDiv">
+                <div class="picImgDiv">
+                    <div class="textCenter">
+                        <img
+                            src=""
+                            alt="Image"
+                            class="picImage"
+                            id="viewImage"
+                        />
+                    </div>
+                </div>
+                <input type="file" name="uploadImage" id="imageUpload" class="shortFileName margintop05" accept=".jpg, .jpeg, .png" onchange="addImage()" value=""/>
+            </div>
+            <br>
+            <div class="metaDiv">
+                <div class="textCenter">
+                    <input class="form-control" type="text" name="picName" placeholder="Photo Name" aria-label="Photo Name" required>
+                    <input class="form-control margintop1" type="text" name="picLocation" placeholder="Location" aria-label="Location" required>
+                    <input type="number" name="picAccess" min="1" max="3" class="form-control margintop1" required placeholder="Photo access level">
+                    <input class="form-control margintop1" type="text" name="picTags" placeholder="Enter tags (seperated by a comma)" aria-label="Tags" required>
+                    <button class="btn btn-success width10 margintop1 saveImgBtn" type="submit">Upload Photo</button>
+                </div>
+            </div>
+        </form>
+        
+    </div>
+    <%- include("partials/footer") -%>
+</body>

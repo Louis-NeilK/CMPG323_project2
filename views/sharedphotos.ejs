@@ -1,1 +1,16 @@
-<h1>Shared Photos</h1>
+<%- include("partials/title") -%>
+
+<body>
+    <nav class="navbar navbar-light bg-light">
+        <div class="container-fluid navbarSpacing">
+            <a class="navbar-brand" href="/myphotos">
+                <img src="/images/fotoshare_logo.png" alt="fotoshare_logo" class="headerLogo">
+            </a>
+          <form class="d-flex">
+            <a href="/myphotos" class="btn btn-success btnHeader">My Photos</a>
+            <a href="/logout" class="text-danger btnLogout">Logout</a>
+          </form>
+        </div>
+    </nav>    
+    <%- include("partials/footer") -%>
+</body>

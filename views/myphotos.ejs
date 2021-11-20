@@ -1,1 +1,45 @@
-<h1>My Photos</h1>
+<%- include("partials/title") -%>
+
+<body>
+    <nav class="navbar navbar-light bg-light">
+        <div class="container-fluid navbarSpacing">
+            <a class="navbar-brand" href="/myphotos">
+                <img src="/images/fotoshare_logo.png" alt="fotoshare_logo" class="headerLogo">
+            </a>
+          <form class="d-flex">
+            <a href="/sharedphotos" class="btn btn-success btnHeader">Shared Photos</a>
+            <a href="/logout" class="text-danger btnLogout">Logout</a>
+          </form>
+        </div>
+    </nav>    
+
+    <div class="container-fluid">
+        <br>
+        <div class="myphotosBody">
+            <br>
+            <h1 class="textCenter">My <span class="text-success">Photos</span></h1>
+            <div class="textRight">
+                <a href="/uploadphoto" class="btn btn-primary textRight">Upload Photo</a>
+            </div>
+            <br>
+            <% if (photos.length > 0){%>
+                <div class="textCenter">
+                    <% photos.forEach(function(p, i){%>
+                        <a href="#" id="<%=i%>" class="openPhotoMeta"><img src="<%=p.link%>" alt="Photo" class="showPhotoImg"></a>
+                        <input type="hidden" class="hID<%=i%>" value="<%=p._id%>">
+                        <input type="hidden" class="hName<%=i%>" value="<%=p.name%>">
+                        <input type="hidden" class="hLocation<%=i%>" value="<%=p.location%>">
+                        <input type="hidden" class="hTags<%=i%>" value="<%=p.tags%>">
+                        <input type="hidden" class="hDate<%=i%>" value="<%=p.createdDate.toDateString()%>">
+                        <input type="hidden" class="hAccess<%=i%>" value="<%=p.accessLevel%>">
+                        <input type="hidden" class="hCreator<%=i%>" value="<%=p.createdByName%>">
+                    <%})%>
+                </div>
+            <%}else{%>
+                <h2 class="textCenter">You have not uploaded any photos yet.</h2>
+            <%}%>
+        </div>
+    </div>
+    <%- include("partials/editPic") -%>
+    <%- include("partials/footer") -%>
+</body>
