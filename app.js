@@ -118,7 +118,6 @@ const Photo = mongoose.model("Photo", photoSchema);
 const User = mongoose.model("User", userSchema);
 passport.use(User.createStrategy());
 
-
 passport.serializeUser(function (user, done) {
 	done(null, user.id);
 });
