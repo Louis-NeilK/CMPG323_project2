@@ -11,6 +11,92 @@
             <a href="/logout" class="text-danger btnLogout">Logout</a>
           </form>
         </div>
-    </nav>    
+    </nav>
+
+    <div class="container-fluid">
+        <br>
+        <div class="myphotosBody">
+            <br>
+            <h1 class="textCenter">Shared <span class="text-success">Photos</span></h1>
+            <br>
+            <div class="searchDiv">
+              <form action="/search" method="post">
+                <div class="input-group md-form form-sm form-2 pl-0">
+                  <input class="form-control my-0 py-1 red-border" type="text" placeholder="Search for a photo by its metadata" aria-label="Search" name="searchQuery">
+                  <div class="input-group-append">
+                    <button class="input-group-text red lighten-3" id="basic-text1" type="submit"><a class="fas fa-search text-black" aria-hidden="true">Search</a></button>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <br>
+            <% if (search === true){%>
+              <h2 class="textCenter">Search results for: "<%=searchTerm%>"</h2>
+            <%}%>
+            <% if (photos.length > 0){%>
+                <div class="textCenter">
+                    <% photos.forEach(function(p, i){%>
+                        <% if (p.visible === false){%>
+                          <a href="#" id="<%=p._id%>" class="openReqAccess"><img src="<%=p.link%>" alt="Photo" class="showPhotoImg hidePhoto"></a>                       
+                        <%}else{%>
+                          <a href="#" id="<%=i%>" class="openSharedMeta"><img src="<%=p.link%>" alt="Photo" class="showPhotoImg"></a>
+                          <input type="hidden" class="sID<%=i%>" value="<%=p._id%>">
+                          <input type="hidden" class="sLink<%=i%>" value="<%=p.link%>">
+                          <input type="hidden" class="sName<%=i%>" value="<%=p.name%>">
+                          <input type="hidden" class="sLocation<%=i%>" value="<%=p.location%>">
+                          <input type="hidden" class="sTags<%=i%>" value="<%=p.tags%>">
+                          <input type="hidden" class="sDate<%=i%>" value="<%=p.createdDate.toDateString()%>">
+                          <input type="hidden" class="sAccess<%=i%>" value="<%=p.accessLevel%>">
+                          <input type="hidden" class="sCreator<%=i%>" value="<%=p.createdByName%>">
+                        <%}%>
+                    <%})%>
+                </div>
+            <%}else if(search === false){%>
+                <h2 class="textCenter">No one has shared photos with you yet.</h2>
+            <%}else{%>
+              <br>
+              <h4 class="textCenter">No photos found.</h4>
+            <%}%>
+        </div>
+    </div>
+
+    <% if (requested === true){%>
+      <div class="popupShow infoAccessDiv">
+          <div class="deletePicInfo">
+              <h5 class="text-success textCenter">You have requested access</h5>
+              <div class="textCenter">
+                  <a href="#" class="btn btn-cancel margintop05 btnCloseAccess width10">Okay</a>
+              </div>
+          </div>
+      </div>
+    <%}%>
+
+    <div class="popupNoShow requestAccessDiv">
+      <div class="deletePicInfo">
+          <h5 class="textCenter">Do you want to request access to this photo?</h5>
+          <form action="/requestAccess" method="POST" class="margintop05">
+              <div class="textCenter">
+                  <input type="hidden" name="picID" class="reqIDForm" value="">
+                  <button class="btn btn-info margintop1 width10" type="submit">Request</button>
+              </div>
+          </form>
+          <div class="textCenter">
+              <a href="#" class="btn btn-cancel margintop05 btnCloseReqAccess width10">Close</a>
+          </div>
+      </div>
+    </div>
+
+    <% if (deleted === true){%>
+      <div class="popupShow sharedDeletedDiv">
+          <div class="deletePicInfo">
+              <h5 class="text-danger textCenter">The shared photo has been deleted</h5>
+              <div class="textCenter">
+                  <a href="/sharedphotos" class="btn btn-cancel margintop05 width10">Okay</a>
+              </div>
+          </div>
+      </div>
+  <%}%>
+      <br class="mobileShow">
+    <%- include("partials/editPic") -%>
     <%- include("partials/footer") -%>
 </body>

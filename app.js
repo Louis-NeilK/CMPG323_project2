@@ -91,9 +91,17 @@ const userSchema = new mongoose.Schema({
 	requests: Array
 })
 // SharedPhotos = {
-// 	id: String,
+// 	_id: String,
 // 	access: Boolean
 // }
+
+// requests = {
+// 	photoID: String,
+// 	photoName = String,
+// 	userID: String,
+// 	userName: String
+// }
+
 const photoSchema = new mongoose.Schema({
 	name: String,
 	location: String,
@@ -126,22 +134,41 @@ function usernameToLowerCase(req, res, next) {
 }
 
 app.get("/", function(req, res){
-    res.render("index")
+    res.render("index", {sError: false, lError: false})
+})
+
+app.get("/invalidLogin", function(req, res){
+    res.render("index", {sError: false, lError: true})
+})
+
+app.get("/invalidSignup", function(req, res){
+    res.render("index", {sError: true, lError: false})
 })
 
 app.post("/signup", usernameToLowerCase, function(req, res){
 	try {
-		User.register({username: req.body.username}, req.body.password, function(err, user){
+		User.findOne({username: req.body.username}, function(err, fUser){
 			if (err){
-				console.log(err)
-				res.redirect("/")
+				console.log(err);
+				res.redirect("/");
 			}else{
-				user.name = req.body.name;
-				user.access = req.body.access;
-				user.save();
-				passport.authenticate("local", {failureRedirect: "/"})(req, res, function(){
-					res.redirect("/myphotos");
-				})
+				if (fUser){
+					res.redirect("/invalidSignup");
+				}else{
+					User.register({username: req.body.username}, req.body.password, function(err, user){
+						if (err){
+							console.log(err)
+							res.redirect("/")
+						}else{
+							user.name = req.body.name;
+							user.access = req.body.access;
+							user.save();
+							passport.authenticate("local", {failureRedirect: "/invalidLogin"})(req, res, function(){
+								res.redirect("/myphotos");
+							})
+						}
+					})
+				}
 			}
 		})
 	} catch (e) {
@@ -160,7 +187,7 @@ app.post("/signin", usernameToLowerCase, function(req, res){
 			if (err){
 				console.log(err);
 			}else{
-				passport.authenticate("local", {failureRedirect: "/"})(req, res, function(){
+				passport.authenticate("local", {failureRedirect: "/invalidLogin"})(req, res, function(){
 					res.redirect("/myphotos");
 				})
 			}
@@ -179,7 +206,7 @@ app.get("/myphotos", function(req, res){
 					console.log(err);
 					res.redirect("/")
 				}else{
-					res.render("myphotos", {photos: photos})
+					res.render("myphotos", {photos: photos, deleted: false, shared: "none", user: req.user})
 				}
 			})
 		}else{
@@ -191,10 +218,201 @@ app.get("/myphotos", function(req, res){
 	}
 })
 
-app.get("/sharedphotos", function(req, res){
+async function getPhoto(req, i){
+	return Photo.findOne({_id: req.user.sharedPhotos[i]._id})
+}
+
+async function getPhotos(req){
+	let photos = [];
+	for (let i = 0; i < req.user.sharedPhotos.length; i++){
+		let p = await getPhoto(req, i)
+		if (p){
+			let obj = {
+				_id: p._id,
+				name: p.name,
+				link: p.link,
+				location: p.location,
+				tags: p.tags,
+				createdDate: p.createdDate,
+				accessLevel: p.accessLevel,
+				createdByName: p.createdByName,
+				visible: req.user.sharedPhotos[i].access
+			}
+			photos.push(obj);
+		}else{
+			User.findOneAndUpdate({_id: req.user._id}, {$pull: {sharedPhotos: {_id: req.user.sharedPhotos[i]._id}}}, function(err){
+				if (err){
+					console.log(err);
+					res.redirect("/myphotos")
+				}
+			})			
+		}
+	}	
+	return photos;
+}
+
+async function getSharedPhotos(req, res){
 	try {
 		if (req.isAuthenticated()){
-			res.render("sharedphotos")
+			let photos = await getPhotos(req);
+			res.render("sharedphotos", {photos: photos, requested: false, deleted: false, search: false, searchTerm: ""});
+		}else{
+			res.redirect("/");
+		}
+	} catch (e) {
+		console.log(e);
+		res.redirect("/");
+	}
+}
+
+app.get("/sharedphotos", function(req, res){
+	getSharedPhotos(req, res);
+})
+
+async function getAccessPage(req, res){
+	try {
+		if (req.isAuthenticated()) {
+			let photos = await getPhotos(req);
+			Photo.findOne({_id: req.body.picID}, function(err, p){
+				if (err){
+					console.log(err);
+					res.redirect("/myphotos")
+				}else{
+					User.findOne({_id: p.createdBy}, function(err, u){
+						if (err){
+							console.log(err);
+							res.redirect("/sharedphotos")
+						}else{
+							let obj = {
+								photoID: p._id,
+								photoName: p.name,
+								userID: req.user._id,
+								userName: req.user.name
+							}
+							u.requests.push(obj);
+							u.save();
+							res.render("sharedphotos", {photos: photos, requested: true, deleted: false, search: false, searchTerm: ""});
+						}
+					})
+				}
+			})
+		} else {
+			res.redirect("/");
+		}
+	} catch (e) {
+		console.log(e);
+		res.redirect("/");
+	}
+}
+app.post("/requestAccess", function(req, res){
+	getAccessPage(req, res);
+})
+
+app.post("/search", function(req,res){
+	try {
+		if (req.isAuthenticated()) {
+			Photo.find({$or: [{name: {$regex: req.body.searchQuery,	$options: "i",},}, {location: {$regex: req.body.searchQuery, $options: "i",},}, {tags: {$regex: req.body.searchQuery, $options: "i",},},]}, function (err, results) {
+					if (!err) {
+						let fotos = [];
+						for (let i = 0; i < req.user.sharedPhotos.length; i++){
+							for (let j = 0; j < results.length; j++){
+								console.log(req.user.sharedPhotos[i]._id)
+								console.log(results[j]._id)
+								if (req.user.sharedPhotos[i]._id.toString() === results[j]._id.toString()){
+									console.log("in")
+									let obj = {
+										_id: results[j]._id,
+										name: results[j].name,
+										link: results[j].link,
+										location: results[j].location,
+										tags: results[j].tags,
+										createdDate: results[j].createdDate,
+										accessLevel: results[j].accessLevel,
+										createdByName: results[j].createdByName,
+										visible: req.user.sharedPhotos[i].access
+									}
+									fotos.push(obj);
+								}
+							}
+						}
+						console.log("end")
+						res.render("sharedphotos", {photos: fotos, requested: false, deleted: false, search: true, searchTerm: req.body.searchQuery});
+					} else {
+						console.log(err);
+						res.redirect("/myphotos");
+					}
+				}
+			);
+		} else {
+			res.redirect("/");
+		}
+	} catch (e) {
+		console.log(e);
+		res.redirect("/");
+	}
+})
+
+app.post("/grantAccess", function(req, res){
+	try {
+		if (req.isAuthenticated()){
+			User.findOne({_id: req.user._id}, function(err, me){
+				if (err){
+					console.log(err);
+					res.redirect("/myphotos");
+				}else{
+					let reqID = req.user.requests[0].userID;
+					let photoID =req.user.requests[0].photoID;
+					me.requests.shift();
+					me.save();
+					User.findOne({_id: reqID}, function(err, u){
+						if (err){
+							console.log(err);
+							res.redirect("/myphotos");
+						}else{
+							for (let i = 0; i < u.sharedPhotos.length; i++){
+								if (u.sharedPhotos[i]._id.toString() === photoID.toString()){
+									User.findOneAndUpdate({_id: reqID}, {$pull: {sharedPhotos: {_id: photoID}}}, function(err, us){
+										if (err){
+											console.log(err);
+											res.redirect("/myphotos");
+										}else{
+											let obj = {
+												_id: photoID,
+												access: true
+											}
+											us.sharedPhotos.push(obj)
+											us.save();
+											res.redirect("/myphotos");
+										}
+									})				
+								}
+							}
+						}
+					})
+				}
+			})
+		}else{
+			res.redirect("/");
+		}
+	} catch (e) {
+		console.log(e);
+		res.redirect("/");
+	}
+})
+
+app.post("/denyAccess", function(req, res){
+	try {
+		if (req.isAuthenticated()){
+			User.findOne({_id: req.user._id}, function(err, me){
+				if (err){
+					console.log(err);
+					res.redirect("/myphotos");
+				}else{
+					me.requests.shift();
+					me.save();
+					res.redirect("/myphotos");
+				}
+			})
 		}else{
 			res.redirect("/");
 		}
@@ -207,7 +425,7 @@ app.get("/sharedphotos", function(req, res){
 app.get("/uploadphoto", function(req, res){
 	try {
 		if (req.isAuthenticated()){
-			res.render("upload")
+			res.render("upload", {error: false})
 		}else{
 			res.redirect("/");
 		}
@@ -245,7 +463,7 @@ app.post("/uploadPic", upload.single("uploadImage"), function(req, res){
 		}
 	} catch (e) {
 		console.log(e);
-		res.redirect("/");
+		res.render("upload", {error: true});
 	}
 })
 
@@ -264,7 +482,11 @@ app.post("/editMeta", function(req, res){
 					p.save();
 				}
 			})
-			res.redirect("/myphotos")
+			if (req.body.site === "my"){
+				res.redirect("/myphotos")
+			}else{
+				res.redirect("/sharedphotos")
+			}
 		} else {
 			res.redirect("/");
 		}
@@ -274,20 +496,102 @@ app.post("/editMeta", function(req, res){
 	}
 })
 
-app.post("/deletePic", function(req, res){
+app.post("/sharePic", function(req, res){
+	try {
+		if (req.isAuthenticated()) {
+			Photo.find({createdBy: req.user._id}, function(err, photos){
+				if (err){
+					console.log(err);
+					res.redirect("/")
+				}else{
+					Photo.findOne({_id: req.body.picID}, function(err, p){
+						if (err){
+							console.log(err);
+							res.redirect("/myphotos")
+						}else{
+							User.findOne({username: req.body.email}, function(err, u){
+								if (err){
+									console.log(err);
+									res.redirect("/myphotos");
+								}else{
+									if (u){
+										let acc = true;
+										if (u.access < p.accessLevel){
+											acc = false;
+										}
+										let obj = {
+											_id: p._id,
+											access: acc
+										}
+										u.sharedPhotos.push(obj)
+										u.save();
+										res.render("myphotos", {photos: photos, deleted: false, shared: "info", user: req.user})	
+									}else{
+										res.render("myphotos", {photos: photos, deleted: false, shared: "error", user: req.user})
+									}
+								}
+							})
+						}
+					})
+				}
+			})
+		} else {
+			res.redirect("/");
+		}
+	} catch (e) {
+		console.log(e);
+		res.redirect("/");
+	}
+})
+
+async function getDeletePage(req, res){
 	try {
 		if (req.isAuthenticated()){
-			var pars = {
-				Bucket: process.env.BUCKET_NAME,
-				Key: "cmpg323_project/" + delFile,
-			};
-			s3.deleteObject(pars, function (err, data) {
-				if (err) {
-					console.log(err, err.stack);
+			let fotos = await getPhotos(req);
+			Photo.findOne({_id: req.body.picID}, function(err, pic){
+				if (err){
+					console.log(err);
+					res.redirect("/myphotos")
 				}else{
-					res.render("myphotos")
+					let ff = pic.link;
+					ff = ff.slice(53);
+					var pars = {
+						Bucket: process.env.BUCKET_NAME,
+						Key: "cmpg323_project/" + ff,
+					};
+					s3.deleteObject(pars, function (err, data) {
+						if (err) {
+							console.log(err, err.stack);
+						}
+					});
+					Photo.deleteOne({_id: pic._id}, function(err){
+						if (err){
+							console.log(err);
+							res.redirect("/myphotos");
+						}else{
+							Photo.find({createdBy: req.user._id}, function(err, photos){
+								if (err){
+									console.log(err);
+									res.redirect("/")
+								}else{
+									if (req.body.site === "my"){
+										res.render("myphotos", {photos: photos, deleted: true, shared: "none", user: req.user})
+									}else{
+										User.findOneAndUpdate({_id: req.user._id}, {$pull: {sharedPhotos: {_id: pic._id}}}, function(err){
+											if (err){
+												console.log(err);
+												res.redirect("/myphotos");
+											}else{
+												res.render("sharedphotos", {photos: fotos, requested: false, deleted: true, search: false});
+											}
+										})											
+									}
+								}
+							})
+						}
+					})
 				}
-			});
+			})
 		}else{
 			res.redirect("/");
 		}
@@ -295,6 +599,10 @@ app.post("/deletePic", function(req, res){
 		console.log(e);
 		res.redirect("/");
 	}
+}
+
+app.post("/deletePic", function(req, res){
+	getDeletePage(req, res)
 })
 app.get("/logout", function (req, res) {
 	try {

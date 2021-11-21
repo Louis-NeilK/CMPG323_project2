@@ -26,7 +26,7 @@
                         />
                     </div>
                 </div>
-                <input type="file" name="uploadImage" id="imageUpload" class="shortFileName margintop05" accept=".jpg, .jpeg, .png" onchange="addImage()" value=""/>
+                <input type="file" name="uploadImage" id="imageUpload" class="shortFileName margintop05" accept=".jpg, .jpeg, .png, .bmp, .ico, .tiff, .gif" onchange="addImage()" value=""/>
             </div>
             <br>
             <div class="metaDiv">
@@ -38,8 +38,18 @@
                     <button class="btn btn-success width10 margintop1 saveImgBtn" type="submit">Upload Photo</button>
                 </div>
             </div>
-        </form>
-        
+        </form>        
     </div>
+
+    <% if (error === true){%>
+        <div class="popupShow errorTypeDiv">
+            <div class="deletePicInfo">
+                <h5 class="text-danger textCenter">Incorrect file type</h5>
+                <div class="textCenter">
+                    <a href="#" class="btn btn-cancel margintop05 btnCloseErrorType width10">Okay</a>
+                </div>
+            </div>
+        </div>
+    <%}%>
     <%- include("partials/footer") -%>
 </body>

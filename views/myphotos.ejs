@@ -18,7 +18,8 @@
         <div class="myphotosBody">
             <br>
             <h1 class="textCenter">My <span class="text-success">Photos</span></h1>
-            <div class="textRight">
+            <br class="mobileShow">
+            <div class="textRight mobileCenter">
                 <a href="/uploadphoto" class="btn btn-primary textRight">Upload Photo</a>
             </div>
             <br>
@@ -28,6 +29,7 @@
                         <a href="#" id="<%=i%>" class="openPhotoMeta"><img src="<%=p.link%>" alt="Photo" class="showPhotoImg"></a>
                         <input type="hidden" class="hID<%=i%>" value="<%=p._id%>">
                         <input type="hidden" class="hName<%=i%>" value="<%=p.name%>">
+                        <input type="hidden" class="hLink<%=i%>" value="<%=p.link%>">
                         <input type="hidden" class="hLocation<%=i%>" value="<%=p.location%>">
                         <input type="hidden" class="hTags<%=i%>" value="<%=p.tags%>">
                         <input type="hidden" class="hDate<%=i%>" value="<%=p.createdDate.toDateString()%>">
@@ -40,6 +42,63 @@
             <%}%>
         </div>
     </div>
+
+    <% if (deleted === true){%>
+        <div class="popupShow infoDeletedDiv">
+            <div class="deletePicInfo">
+                <h5 class="text-danger textCenter">Your photo has been deleted</h5>
+                <div class="textCenter">
+                    <a href="#" class="btn btn-cancel margintop05 btnCloseInfoDelete width10">Okay</a>
+                </div>
+            </div>
+        </div>
+    <%}%>
+
+    <% if (shared === "info"){%>
+        <div class="popupShow infoSharedDiv">
+            <div class="deletePicInfo">
+                <h5 class="text-success textCenter">Your photo has been shared</h5>
+                <div class="textCenter">
+                    <a href="#" class="btn btn-cancel margintop05 btnCloseInfoShared width10">Okay</a>
+                </div>
+            </div>
+        </div>
+    <%}%>
+
+    <% if (shared === "error"){%>
+        <div class="popupShow infoSharedErrorDiv">
+            <div class="deletePicInfo">
+                <h5 class="text-danger textCenter">User was not found</h5>
+                <div class="textCenter">
+                    <a href="#" class="btn btn-cancel margintop05 btnCloseInfoErrorShared width10">Okay</a>
+                </div>
+            </div>
+        </div>
+    <%}%>
+
+    <% if (user.requests.length > 0){%>
+        <div class="popupShow photoRequestDiv">
+            <div class="deletePicInfo">
+                <h5 class="textCenter"><span class="text-success"><b><%=user.requests[0].userName%></b></span> has requested access to <span class="text-success"><b><%=user.requests[0].photoName%></b></span></h5>
+                <form action="/grantAccess" method="POST" class="margintop05">
+                    <div class="textCenter">
+                        <input type="hidden" name="picID" class="idForm" value="">
+                        <button class="btn btn-success margintop1 width10" type="submit">Grant Access</button>
+                    </div>
+                </form>
+                <form action="/denyAccess" method="POST" class="margintop05">
+                    <div class="textCenter">
+                        <input type="hidden" name="picID" class="idForm" value="">
+                        <button class="btn btn-danger margintop05 width10" type="submit">Deny Access</button>
+                    </div>
+                </form>
+                <br>
+            </div>
+        </div>
+    <%}%>
+
+    <br class="mobileShow">
+
     <%- include("partials/editPic") -%>
     <%- include("partials/footer") -%>
 </body>
