@@ -62,6 +62,9 @@ body{
     margin-bottom: 0.25rem;
     margin-top: 0.5rem;
 }
+.mobileShow{
+    display: none;
+}
 
 /************************************************Index page**********************************************/
 
@@ -218,5 +221,15 @@ body{
     }
     .btnDeletePic{
         margin-top: 0.5rem;
+    }
+    .indexBody{
+        padding: 0rem;
+    }
+    .indexColour{
+        border-radius: 0;
+    }
+    .removePadding{
+        margin-left: 0;
+        margin-right: 0;
     }
 }
